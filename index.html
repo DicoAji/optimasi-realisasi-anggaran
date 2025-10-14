@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Optimasi Laporan Realisasi Anggaran</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+
+    <style>
+      /* Menggunakan Montserrat sebagai font default */
+      body {
+        font-family: "Montserrat", sans-serif;
+      }
+
+      /* Custom style untuk hover button (Ikon Panah) */
+      .btn-green-hover-forward:hover .fa-arrow-right {
+        transform: translateX(4px);
+        transition: transform 0.3s ease-in-out;
+      }
+
+      .t-green {
+        color: #527c10 !important;
+      }
+      p {
+        font-size: 20px;
+      }
+      .nav-list a {
+        font-size: 16px !important;
+        cursor: pointer; /* Tambahkan cursor pointer untuk fungsi tab */
+      }
+      .drop-area {
+        border: 2px dashed #ccc;
+        border-radius: 8px;
+        padding: 30px;
+        text-align: center;
+        cursor: pointer;
+        margin-bottom: 20px;
+        transition: border-color 0.3s ease, background-color 0.3s ease;
+      }
+
+      /* --- STYLE KHUSUS FUNGSI DARI generate.html & mergejson.html --- */
+      /* Digunakan di Function Area */
+      .file-list {
+        margin-top: 15px;
+        text-align: left;
+        border: 0.1px solid #a5a5a5;
+        background-color: #565656;
+        padding: 10px;
+        border-radius: 5px;
+        display: none;
+      }
+      .file-list p {
+        margin: 5px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: rgb(88, 88, 88);
+        font-size: 14px;
+      }
+      .error-message {
+        color: red;
+        margin-top: 15px;
+        font-weight: bold;
+        display: none;
+      }
+      .remove-file {
+        font-weight: bold;
+        margin-left: 10px;
+        cursor: pointer;
+      }
+
+      /* Style untuk Tabel Generate */
+      #data-output {
+        display: none;
+        margin-top: 20px;
+      }
+      #data-output table {
+        background-color: white;
+        border-collapse: collapse;
+        width: 100%;
+      }
+      #data-output th,
+      #data-output td {
+        border: 1px solid #000000;
+        padding: 8px 12px;
+        text-align: left;
+        color: black;
+      }
+      .program-row {
+        font-weight: bold;
+        background-color: #f0fdf4;
+      }
+      .kegiatan-row {
+        font-style: italic;
+        background-color: #f7fee7;
+      }
+      .subkegiatan-row {
+        background-color: #ffffff;
+      }
+      .total-row td {
+        font-weight: bold;
+        background-color: #ccfbf1;
+      }
+
+      /* Style untuk Output Merge JSON */
+      #output-area-merge {
+        margin-top: 20px;
+        color: white;
+        display: none;
+      }
+      #json-output {
+        display: block;
+        padding: 10px;
+        background-color: #181818;
+        border: 1px solid #333;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+      #download-button-json {
+        margin-top: 10px;
+        cursor: pointer;
+        display: none;
+      }
+
+      /* --- STYLE KHUSUS TOGGLE SWITCH BARU --- */
+      .toggle-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px 0;
+      }
+      .toggle-label {
+        transition: color 0.3s ease;
+      }
+
+      /* Switch wrapper */
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 80px; /* Lebar switch */
+        height: 40px; /* Tinggi switch */
+        margin: 0 20px;
+      }
+
+      /* Hide default checkbox */
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      /* Slider (tombol geser) */
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #527c10; /* Warna latar belakang mati */
+        transition: 0.4s;
+        border-radius: 40px;
+        box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Tombol bulat */
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 32px; /* Tinggi tombol */
+        width: 32px; /* Lebar tombol */
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Ketika aktif/dicentang */
+      input:checked + .slider {
+        background-color: #ef4444; /* Warna latar belakang aktif (Red-500) */
+      }
+
+      input:checked + .slider:before {
+        transform: translateX(
+          40px
+        ); /* Geser ke kanan (80px - 32px - 4px*2 = 40px) */
+      }
+
+      /* Warna teks aktif */
+      .label-generate {
+        color: #527c10;
+      } /* t-green */
+      .label-merge {
+        color: #ccc;
+      }
+
+      .active-label-merge {
+        color: #ef4444;
+      } /* Red-500 */
+      .active-label-generate {
+        color: #ccc;
+      }
+      /* Custom CSS untuk Animasi Memantul */
+      .bounce-scroll {
+        /* Keyframes untuk efek sedikit "goyang" atau "memantul" */
+        animation: bounce-effect 1s ease-in-out;
+      }
+
+      @keyframes bounce-effect {
+        0% {
+          transform: translateY(-15px);
+        }
+        50% {
+          transform: translateY(0px);
+        }
+        100% {
+          transform: translateY(-20px); /* Sedikit naik */
+        }
+      }
+    </style>
+  </head>
+  <body class="text-gray-900 bg-white">
+    <header
+      class="px-4 py-4 md:py-6 w-full fixed top-0 z-50 bg-white shadow-md transition-all duration-800"
+    >
+      <div class="flex justify-between items-center text-sm font-semibold">
+        <span class="text-gray-500 font-bold text-green-800"
+          >DINAS PERTANIAN <br />KABUPATEN GROBOGAN</span
+        >
+      </div>
+    </header>
+
+    <main class="mt-24">
+      <section class="hero">
+        <div
+          class="grid grid-cols-1 sm:grid-cols-2 gap-10 mt-4 container-fluid mx-auto"
+        >
+          <div class="h-auto my-auto max-md:p-3 md:ml-10">
+            <p
+              class="text-green-900 bg-yellow-50 inline-flex sm:px-8 sm:py-4 px-6 py-3 sm:text-lg text-sm shadow-sm rounded-full font-semibold mb-2"
+            >
+              New Energy for Our System
+            </p>
+            <h1 class="font-extrabold leading-tight text-6xl mb-4">
+              <span class="t-green">Optimasi</span> Laporan
+              <br class="hidden md:block" />
+              Realisasi <span class="t-green">Anggaran</span>
+            </h1>
+            <p class="text-gray-600 mb-8">
+              Optimasi, percepatan dan kemudahan dalam penyusunan laporan
+              Realisasi Anggaran secara akurat dan tepat waktu.
+            </p>
+
+            <a
+              href="http://dinpertan.grobogan.go.id/"
+              class="inline-flex items-center shadow-md bg-green-900 text-white font-semibold py-3 px-6 rounded-full text-lg btn-green-hover-forward hover:bg-green-1000 transition duration-300"
+            >
+              Visit Dispertan
+              <i
+                class="fa-solid rounded-full text-green-900 font-bold bg-white p-2 fa-arrow-right ml-2 transition-transform duration-300"
+              ></i>
+            </a>
+            <div class="">
+              <div
+                class="flex justify-around w-90 mt-12 bg-yellow-50 p-6 text-gray-700 rounded-full"
+              >
+                <div class="flex flex-col items-center">
+                  <i
+                    class="fa-solid fa-rotate text-green-800 text-3xl sm:text-5xl mb-1"
+                  ></i>
+                  <span class="text-lg font-bold text-gray-400"
+                    >Syncronize</span
+                  >
+                </div>
+
+                <div class="flex flex-col items-center">
+                  <i
+                    class="fa-solid fa-bullseye text-green-800 text-3xl sm:text-5xl mb-1"
+                  ></i>
+                  <span class="text-lg font-bold text-gray-400">Accurate</span>
+                </div>
+
+                <div class="flex flex-col items-center">
+                  <i
+                    class="fa-solid fa-clock-rotate-left text-green-800 text-3xl sm:text-5xl mb-1"
+                  ></i>
+                  <span class="text-lg font-bold text-gray-400"
+                    >Efficience</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="px-6 relative h-96 sm:h-auto">
+            <div
+              class="w-full h-full overflow-hidden shadow-2xl dark:shadow-none rounded-lg"
+            >
+              <div
+                id="image-carousel"
+                class="flex transition-transform duration-1000 ease-in-out w-[400%]"
+                style="transform: translateX(0%)"
+              >
+                <img
+                  src="img/petani.png"
+                  alt="Petani di Sawah"
+                  class="w-1/4 h-full object-cover object-center border"
+                  onerror="this.onerror=null;this.src='';"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="bg-[#253D2F] mt-10 sm:mt-20 p-8 md:p-20">
+        <div class="container mx-auto px-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div class="">
+              <div class="">
+                <p class="text-yellow-200 mb-4">//OUR WORK</p>
+                <h2
+                  class="text-3xl text-white md:text-5xl font-bold mb-4 max-w-md"
+                >
+                  Tentang Alur Pengoperasian Sistem Informasi
+                </h2>
+              </div>
+              <small class="text-gray-200 text-lg font-regular max-w-md">
+                Kami hadirkan solusi digital untuk transparansi dan efisiensi
+                pelaporan. Sistem ini mengotomatisasi alur kerja penyusunan
+                laporan realisasi anggaran, sehingga pengelolaan keuangan
+                program Dinas Pertanian Kabupaten Grobogan menjadi lebih terukur
+                dan akuntabel.
+              </small>
+            </div>
+
+            <div class="w-full h-auto sm:p-3 hidden md:block">
+              <img
+                src="img/melon.png"
+                alt="Buah Melon"
+                class="w-full h-full object-contain object-center"
+                onerror="this.onerror=null;this.src='';"
+              />
+            </div>
+
+            <div class="space-y-12">
+              <div class="flex items-start space-x-4">
+                <span
+                  class="text-2xl font-semibold rounded-full text-green-500 bg-yellow-100 p-3"
+                  >01</span
+                >
+                <div class="space-y-2">
+                  <h2 class="font-semibold text-white text-xl">
+                    Install Postman
+                  </h2>
+                  <a
+                    href="https://www.postman.com/downloads/"
+                    class="inline-flex items-center shadow-md bg-green-500 text-white py-2 px-5 rounded-full text-lg btn-green-hover-forward hover:bg-green-900 transition duration-300"
+                  >
+                    <i class="fa-brands text-white fa-windows mr-2"></i> Windows
+                    64-bit
+                  </a>
+                </div>
+              </div>
+
+              <div class="flex items-start space-x-4">
+                <span
+                  class="text-2xl font-semibold rounded-full text-green-500 bg-yellow-100 p-3"
+                  >02</span
+                >
+                <div>
+                  <h2 class="font-semibold text-white text-xl">
+                    Panggil Data di Postman
+                  </h2>
+                  <small class="text-gray-400 text-lg">
+                    Lakukan pemanggilan data dengan Request URL dan input
+                  </small>
+                </div>
+              </div>
+
+              <div class="flex items-start space-x-4">
+                <span
+                  class="text-2xl font-semibold rounded-full text-green-500 bg-yellow-100 p-3"
+                  >03</span
+                >
+                <div>
+                  <h2 class="font-semibold text-white text-xl">
+                    Gabungkan Data Json
+                  </h2>
+                  <small class="text-gray-400 text-lg">
+                    Penggabungan dilakukan sesuai dengan tingkatan data
+                    (Program, Kegiatan dan Sub Kegiatan)
+                  </small>
+                </div>
+              </div>
+
+              <div class="flex items-start space-x-4">
+                <span
+                  class="text-2xl font-semibold rounded-full text-green-500 bg-yellow-100 p-3"
+                  >04</span
+                >
+                <div>
+                  <h2 class="font-semibold text-white text-xl">
+                    Generate Data
+                  </h2>
+                  <small class="text-gray-400 text-lg">
+                    Hasil data siap diolah untuk Laporan Excel.
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="container mx-auto px-4 pt-20">
+        <div class="flex justify-between items-center mb-6">
+          <div class="w-full">
+            <div class="flex justify-between items-center">
+              <h2 class="text-xl md:text-2xl font-bold mb-2 md:mb-0">
+                01 Buku Panduan Penggunaan
+              </h2>
+              <a
+                href="https://drive.google.com/drive/folders/1cV1I9dL8wOMka28uUMyj0Mx-kVdTP4Ag?usp=sharing"
+                class="text-green-700 font-semibold text-sm hover:underline"
+                >Go to link <i class="fa-solid fa-external-link-alt ml-1"></i>
+              </a>
+            </div>
+            <hr />
+            <div class="w-full flex justify-between items-center mt-4">
+              <h2 class="text-xl md:text-2xl font-bold">
+                02 Video Tutorial Penggunaan
+              </h2>
+              <a
+                href="https://drive.google.com/drive/folders/1cV1I9dL8wOMka28uUMyj0Mx-kVdTP4Ag?usp=sharing"
+                class="text-green-700 font-semibold text-sm hover:underline"
+                >Go to link <i class="fa-solid fa-external-link-alt ml-1"></i
+              ></a>
+            </div>
+          </div>
+        </div>
+        <div
+          class="bg-gray-200 h-96 rounded-xl overflow-hidden shadow-xl relative mb-4"
+        >
+          <img
+            src="img/video.png"
+            alt="Video Tutorial Placeholder"
+            class="w-full h-full object-cover object-center filter blur-sm"
+            onerror="this.onerror=null;this.src='';"
+          />
+        </div>
+      </section>
+
+      <section class="">
+        <div class="container mx-auto bg-yellow-50 pt-8 md:pt-16 pb-16 px-4">
+          <!-- toggle -->
+          <div class="flex justify-center w-full py-4">
+            <div
+              class="toggle-container flex items-center bg-gray-800 p-3 rounded-full shadow-2xl border border-gray-700"
+            >
+              <span
+                id="label-generate"
+                class="toggle-label label-generate text-sm text-white px-2"
+                >Generate Data</span
+              >
+              <label class="switch">
+                <input type="checkbox" id="function-toggle" />
+                <span class="slider"></span>
+              </label>
+              <span
+                id="label-merge"
+                class="toggle-label label-merge text-sm text-white px-2"
+                >Merge JSON</span
+              >
+            </div>
+          </div>
+          <div
+            id="function-area"
+            class="container mx-auto px-4 py-5"
+            style="max-width: 95%"
+          >
+            <!-- Generate Data to Excel Report -->
+            <div id="content-generate">
+              <div class="">
+                <div class="space-y-5">
+                  <h1
+                    class="sm:text-5xl text-3xl font-bold leading-tight text-center"
+                  >
+                    Generate Data to
+                    <span class="t-green">Excel Report</span>
+                  </h1>
+
+                  <label
+                    id="drop-area-generate"
+                    for="file-input-generate"
+                    class="drop-area bg-white shadow-lg flex flex-col justify-center items-center"
+                  >
+                    <i
+                      class="fa-solid fa-cloud-arrow-up text-green-600 text-5xl mb-2"
+                    ></i>
+                    <p class="text-gray-600">
+                      <span class="font-semibold text-green-700"
+                        >Pilih file</span
+                      >
+                      atau seret dan lepas (drag & drop)
+                    </p>
+                    <div
+                      id="file-list-generate"
+                      class="file-list bg-gray-100 text-gray-700 p-3 rounded-lg mt-3 w-full"
+                    ></div>
+                    <input
+                      id="file-input-generate"
+                      type="file"
+                      multiple
+                      accept=".json"
+                      class="hidden"
+                    />
+                  </label>
+
+                  <button
+                    id="process-button"
+                    disabled
+                    class="inline-flex mt-4 items-center bg-green-900 text-white font-semibold py-3 px-6 rounded-full text-sm btn-green-hover-forward transition duration-300 disabled:opacity-50"
+                  >
+                    GENERATE LAPORAN
+                    <i
+                      class="fa-solid rounded-full text-green-900 font-bold bg-white p-2 fa-arrow-right ml-2 transition-transform duration-300"
+                    ></i>
+                  </button>
+                  <div
+                    id="error-message-generate"
+                    class="error-message text-red-600"
+                  ></div>
+                </div>
+              </div>
+              <!-- hasil generate -->
+              <div id="data-output" class="data-output">
+                <table
+                  id="data-table"
+                  class="data-table border-collapse border border-gray-600 w-full text-left"
+                >
+                  <thead>
+                    <tr>
+                      <th>Program</th>
+                      <th>Kegiatan</th>
+                      <th>Sub Kegiatan</th>
+                      <th>Anggaran</th>
+                      <th>Realisasi Rill</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+                <div style="margin-top: 20px">
+                  <button
+                    id="download-excel-button"
+                    class="bg-green-800 text-white py-3 px-6 rounded-full hover:bg-green-900 font-bold transition duration-150"
+                    style="display: none"
+                  >
+                    Download Excel
+                    <i class="fa-solid fa-table text-white ml-2"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <!-- Merge Json Files -->
+            <div id="content-merge" style="display: none">
+              <div class="">
+                <div class="space-y-5">
+                  <h2
+                    class="sm:text-5xl text-3xl text-center font-bold leading-tight text-gray-900"
+                  >
+                    Merge <span class="text-red-600">Json Files</span>
+                  </h2>
+
+                  <label
+                    id="drop-area-merge"
+                    for="file-input-merge"
+                    class="drop-area bg-white shadow-lg flex flex-col justify-center items-center"
+                  >
+                    <i
+                      class="fa-solid fa-code-merge text-red-600 text-5xl mb-2"
+                    ></i>
+                    <p class="text-gray-600">
+                      <span class="font-semibold text-red-700"
+                        >Pilih banyak file</span
+                      >
+                      atau seret dan lepas (drag & drop)
+                    </p>
+                    <div
+                      id="file-list-merge"
+                      class="file-list bg-gray-100 text-gray-700 p-3 rounded-lg mt-3 w-full"
+                    ></div>
+                    <input
+                      id="file-input-merge"
+                      type="file"
+                      multiple
+                      accept=".json"
+                      class="hidden"
+                    />
+                  </label>
+
+                  <div class="flex space-x-4">
+                    <button
+                      id="merge-button"
+                      disabled
+                      class="inline-flex items-center bg-red-900 text-white font-semibold py-3 px-6 rounded-full text-sm btn-green-hover-forward transition duration-300 disabled:opacity-50"
+                    >
+                      MERGE JSON
+                      <i
+                        class="fa-solid rounded-full text-red-900 font-bold bg-white p-2 btn-green-hover-forward fa-arrow-right ml-2 transition-transform duration-300"
+                      ></i>
+                    </button>
+                  </div>
+                  <div
+                    id="error-message-merge"
+                    class="error-message text-red-600"
+                  ></div>
+                </div>
+              </div>
+              <!-- hasil merge -->
+              <div id="output-area-merge" class="output-area w-full mt-10">
+                <h3 class="text-2xl font-bold mb-3 text-gray-800">
+                  Hasil Penggabungan
+                </h3>
+                <pre
+                  class="bg-gray-800 text-white p-4 rounded-lg overflow-x-auto"
+                ><code id="json-output"></code></pre>
+                <button
+                  id="download-button-json"
+                  class="bg-red-800 text-white py-4 px-6 font-bold rounded-full hover:bg-red-900 transition duration-150"
+                  style="display: none"
+                >
+                  Download Merged JSON
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="bg-green-900 text-gray-400 text-xs py-4">
+      <div
+        class="container mx-auto px-4 flex justify-between items-center flex-col md:flex-row"
+      >
+        <p class="mb-2 text-white text-[12px] sm:text-[18px] md:mb-0">
+          © 2025 | Copy Right | Dinas Pertanian Kabupaten Grobogan
+        </p>
+        <div class="flex space-x-4">
+          <a href="#" class="text-white hover:text-green-500"
+            ><i class="fab fa-facebook-f"></i
+          ></a>
+          <a href="#" class="text-white hover:text-green-500"
+            ><i class="fab fa-twitter"></i
+          ></a>
+          <a href="#" class="text-white hover:text-green-500"
+            ><i class="fab fa-instagram"></i
+          ></a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="script_generate.js"></script>
+    <script src="script_json.js"></script>
+    <script>
+      // SCRIPT UNTUK MENGONTROL TOGGLE SWITCH
+      document.addEventListener("DOMContentLoaded", () => {
+        const toggleSwitch = document.getElementById("function-toggle");
+        const contentGenerate = document.getElementById("content-generate");
+        const contentMerge = document.getElementById("content-merge");
+        const labelGenerate = document.getElementById("label-generate");
+        const labelMerge = document.getElementById("label-merge");
+
+        function showContent(isMergeActive) {
+          if (isMergeActive) {
+            // Tampilkan Merge JSON, Sembunyikan Generate
+            contentGenerate.style.display = "none";
+            contentMerge.style.display = "block";
+            labelMerge.classList.add("active-label-merge");
+            labelMerge.classList.remove("label-merge");
+            labelGenerate.classList.add("active-label-generate");
+            labelGenerate.classList.remove("label-generate");
+          } else {
+            // Tampilkan Generate Data, Sembunyikan Merge JSON
+            contentGenerate.style.display = "block";
+            contentMerge.style.display = "none";
+            labelGenerate.classList.add("label-generate");
+            labelGenerate.classList.remove("active-label-generate");
+            labelMerge.classList.add("label-merge");
+            labelMerge.classList.remove("active-label-merge");
+          }
+        }
+
+        // Inisialisasi: Default ke Generate Data (toggle unchecked)
+        toggleSwitch.checked = false;
+        showContent(false);
+
+        // Event listener untuk perubahan switch
+        toggleSwitch.addEventListener("change", function () {
+          // Jika checked (true), berarti pindah ke Merge JSON
+          showContent(this.checked);
+        });
+      });
+
+      // Dijalankan saat dokumen sudah siap
+      document.addEventListener("DOMContentLoaded", function () {
+        const header = document.querySelector("header");
+        let isScrolling; // Variabel untuk menahan timer
+
+        window.addEventListener("scroll", function () {
+          // Hapus kelas animasi saat mulai scroll
+          header.classList.remove("bounce-scroll"); // Hapus timer yang ada
+
+          clearTimeout(isScrolling); // Atur timer untuk menambahkan kelas animasi setelah scrolling berhenti
+
+          isScrolling = setTimeout(function () {
+            // Hanya tambahkan jika header sudah di-scroll
+            if (window.scrollY > 50) {
+              // Angka 50 bisa disesuaikan
+              header.classList.add("bounce-scroll"); // Hapus kelas animasi setelah animasi selesai (0.3s)
+
+              setTimeout(() => {
+                header.classList.remove("bounce-scroll");
+              }, 300); // Harus sama dengan durasi animasi CSS (0.3s)
+            }
+          }, 150); // Tambahkan sedikit jeda 150ms setelah scroll berhenti
+        });
+      });
+    </script>
+  </body>
+</html>
