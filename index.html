@@ -247,6 +247,13 @@
     </header>
 
     <main class="mt-24">
+      <button
+        id="scrollToBtn"
+        class="fixed right-5 bottom-5 z-[1000] p-4 px-6 rounded-full shadow-lg text-white transition-opacity duration-300 hover:bg-white hover:text-green-900 hover:border hover:border-green-900 hover:border-2"
+      >
+        <i class="fas fa-arrow-down text-2xl" id="scrollIcon"></i>
+      </button>
+
       <section class="hero">
         <div
           class="grid grid-cols-1 sm:grid-cols-2 gap-10 mt-4 container-fluid mx-auto"
@@ -742,6 +749,79 @@
           }, 150); // Tambahkan sedikit jeda 150ms setelah scroll berhenti
         });
       });
+    </script>
+    <script>
+      // script_json.js (Tambahkan di bagian akhir)
+
+      // ... (kode Merge JSON sebelumnya) ...
+
+      // --- Logika Tombol Scroll To Top/Bottom (Modifikasi) ---
+      const scrollToBtn = document.getElementById("scrollToBtn");
+      const scrollIcon = document.getElementById("scrollIcon");
+
+      // Fungsi untuk mengatur ikon dan warna tombol berdasarkan posisi scroll
+      function toggleScrollButton() {
+        // Ketinggian total yang bisa di-scroll
+        const scrollHeight =
+          document.documentElement.scrollHeight -
+          document.documentElement.clientHeight;
+        // Posisi scroll saat ini
+        const scrolled = window.scrollY;
+
+        // Cek jika sudah di paling bawah
+        // Toleransi 1px untuk memastikan di paling bawah
+        if (Math.ceil(scrolled) >= scrollHeight - 1) {
+          // Tombol berada di paling bawah -> ubah ke arah ATAS (warna merah)
+          scrollIcon.classList.remove("fa-arrow-down");
+          scrollIcon.classList.add("fa-arrow-up");
+
+          // Mengganti warna latar belakang (Opsional: agar lebih jelas perbedaan fungsinya)
+          scrollToBtn.classList.remove("bg-green-800");
+          scrollToBtn.classList.add("bg-green-800");
+        } else {
+          // Tombol tidak di paling bawah -> ubah ke arah BAWAH (warna hijau)
+          scrollIcon.classList.remove("fa-arrow-up");
+          scrollIcon.classList.add("fa-arrow-down");
+
+          scrollToBtn.classList.remove("bg-green-800");
+          scrollToBtn.classList.add("bg-green-800");
+        }
+
+        // CATATAN: Karena Anda ingin tombol selalu terlihat,
+        // logika untuk menyembunyikan/menampilkan tombol (scrollToBtn.style.display = "block"/"none")
+        // DITIADAKAN. Tombol akan selalu memiliki properti 'fixed'.
+      }
+
+      // Fungsi untuk scroll ke posisi yang ditentukan
+      function performScroll(targetPosition) {
+        window.scrollTo({
+          top: targetPosition,
+          behavior: "smooth", // Membuat scroll menjadi halus
+        });
+      }
+
+      // Event listener saat tombol diklik
+      scrollToBtn.addEventListener("click", () => {
+        const scrollHeight =
+          document.documentElement.scrollHeight -
+          document.documentElement.clientHeight;
+        const scrolled = window.scrollY;
+
+        // Cek jika tombol sedang di mode "Scroll Up" (paling bawah)
+        if (Math.ceil(scrolled) >= scrollHeight - 1) {
+          // Jika di paling bawah, scroll ke paling atas (top: 0)
+          performScroll(0);
+        } else {
+          // Jika tidak di paling bawah, scroll ke paling bawah (top: scrollHeight)
+          performScroll(scrollHeight);
+        }
+      });
+
+      // Event listener saat user menggulir layar
+      window.addEventListener("scroll", toggleScrollButton);
+
+      // Panggil sekali saat dimuat untuk mengatur status awal
+      toggleScrollButton();
     </script>
   </body>
 </html>
