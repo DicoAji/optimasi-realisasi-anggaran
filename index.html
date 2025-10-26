@@ -100,20 +100,10 @@
         text-align: left;
         color: black;
       }
-      .program-row {
-        font-weight: bold;
-        background-color: #f0fdf4;
-      }
-      .kegiatan-row {
-        font-style: italic;
-        background-color: #f7fee7;
-      }
-      .subkegiatan-row {
-        background-color: #ffffff;
-      }
+
       .total-row td {
         font-weight: bold;
-        background-color: #ccfbf1;
+        /* background-color: #ccfbf1; */
       }
 
       /* Style untuk Output Merge JSON */
@@ -233,6 +223,16 @@
           transform: translateY(-20px); /* Sedikit naik */
         }
       }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+      th,
+      td {
+        font-family: Arial;
+        font-size: 11pt;
+        border: 1px solid black !important;
+      }
     </style>
   </head>
   <body class="text-gray-900 bg-white">
@@ -337,7 +337,7 @@
       </section>
 
       <section class="bg-[#253D2F] mt-10 sm:mt-20 p-8 md:p-20">
-        <div class="container mx-auto px-4">
+        <div class="mx-auto px-4">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div class="">
               <div class="">
@@ -366,10 +366,10 @@
               />
             </div>
 
-            <div class="space-y-12">
+            <div class="space-y-12 sm:mt-0 mt-5">
               <div class="flex items-start space-x-4">
                 <span
-                  class="text-2xl font-semibold rounded-full text-green-500 bg-yellow-100 p-3"
+                  class="sm:text-2xl text-xl font-semibold rounded-full text-green-500 bg-yellow-100 p-2 sm:p-3"
                   >01</span
                 >
                 <div class="space-y-2">
@@ -388,7 +388,7 @@
 
               <div class="flex items-start space-x-4">
                 <span
-                  class="text-2xl font-semibold rounded-full text-green-500 bg-yellow-100 p-3"
+                  class="sm:text-2xl text-xl font-semibold rounded-full text-green-500 bg-yellow-100 p-2 sm:p-3"
                   >02</span
                 >
                 <div>
@@ -403,7 +403,7 @@
 
               <div class="flex items-start space-x-4">
                 <span
-                  class="text-2xl font-semibold rounded-full text-green-500 bg-yellow-100 p-3"
+                  class="sm:text-2xl text-xl font-semibold rounded-full text-green-500 bg-yellow-100 p-2 sm:p-3"
                   >03</span
                 >
                 <div>
@@ -419,7 +419,7 @@
 
               <div class="flex items-start space-x-4">
                 <span
-                  class="text-2xl font-semibold rounded-full text-green-500 bg-yellow-100 p-3"
+                  class="sm:text-2xl text-xl font-semibold rounded-full text-green-500 bg-yellow-100 p-2 sm:p-3"
                   >04</span
                 >
                 <div>
@@ -436,22 +436,22 @@
         </div>
       </section>
 
-      <section class="container mx-auto px-4 pt-20">
+      <section class="mx-auto px-4 pt-20">
         <div class="flex justify-between items-center mb-6">
           <div class="w-full">
             <div class="flex justify-between items-center">
-              <h2 class="text-xl md:text-2xl font-bold mb-2 md:mb-0">
+              <h2 class="sm:text-xl text-lg md:text-2xl font-bold mb-2 md:mb-0">
                 01 Buku Panduan Penggunaan
               </h2>
               <a
-                href="https://drive.google.com/drive/folders/1cV1I9dL8wOMka28uUMyj0Mx-kVdTP4Ag?usp=sharing"
+                href="https://drive.google.com/file/d/1KVCWnk1nx9H09VGrm4p321MoUDJ5Y-C8/view?usp=sharing"
                 class="text-green-700 font-semibold text-sm hover:underline"
                 >Go to link <i class="fa-solid fa-external-link-alt ml-1"></i>
               </a>
             </div>
             <hr />
             <div class="w-full flex justify-between items-center mt-4">
-              <h2 class="text-xl md:text-2xl font-bold">
+              <h2 class="sm:text-xl text-lg md:text-2xl font-bold">
                 02 Video Tutorial Penggunaan
               </h2>
               <a
@@ -462,7 +462,7 @@
             </div>
           </div>
         </div>
-        <div
+        <!-- <div
           class="bg-gray-200 h-96 rounded-xl overflow-hidden shadow-xl relative mb-4"
         >
           <img
@@ -471,15 +471,15 @@
             class="w-full h-full object-cover object-center filter blur-sm"
             onerror="this.onerror=null;this.src='';"
           />
-        </div>
+        </div> -->
       </section>
 
       <section class="">
-        <div class="container mx-auto bg-yellow-50 pt-8 md:pt-16 pb-16 px-4">
+        <div class="mx-auto bg-yellow-50 pt-10 mt-16 md:pt-16 pb-16 px-4">
           <!-- toggle -->
           <div class="flex justify-center w-full py-4">
             <div
-              class="toggle-container flex items-center bg-gray-800 p-3 rounded-full shadow-2xl border border-gray-700"
+              class="toggle-container flex items-center bg-gray-800 p-3 rounded-full shadow-xl"
             >
               <span
                 id="label-generate"
@@ -568,7 +568,7 @@
                       <th>Kegiatan</th>
                       <th>Sub Kegiatan</th>
                       <th>Anggaran</th>
-                      <th>Realisasi Rill</th>
+                      <th>Realisasi</th>
                     </tr>
                   </thead>
                   <tbody></tbody>
@@ -664,9 +664,9 @@
 
     <footer class="bg-green-900 text-gray-400 text-xs py-4">
       <div
-        class="container mx-auto px-4 flex justify-between items-center flex-col md:flex-row"
+        class="mx-auto px-4 flex justify-between items-center flex-col md:flex-row"
       >
-        <p class="mb-2 text-white text-[12px] sm:text-[18px] md:mb-0">
+        <p class="mb-2 text-white text-[12px] sm:text-[16px] md:mb-0">
           © 2025 | Copy Right | Dinas Pertanian Kabupaten Grobogan
         </p>
         <div class="flex space-x-4">

@@ -1,31 +1,23 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // PENTING: Perubahan ID dari versi asli untuk menghindari konflik dengan Merge JSON
-  const dropArea = document.getElementById("drop-area-generate"); // Diubah
-  const fileInput = document.getElementById("file-input-generate"); // Diubah
-  const fileListDiv = document.getElementById("file-list-generate"); // Diubah
-  const processButton = document.getElementById("process-button"); // Tetap
-  const dataOutputDiv = document.getElementById("data-output"); // Tetap
-  const dataTableBody = document.querySelector("#data-table tbody"); // Tetap
-  const errorMessageDiv = document.getElementById("error-message-generate"); // Diubah
-  const downloadExcelButton = document.getElementById("download-excel-button"); // Tetap
+  const dropArea = document.getElementById("drop-area-generate");
+  const fileInput = document.getElementById("file-input-generate");
+  const fileListDiv = document.getElementById("file-list-generate");
+  const processButton = document.getElementById("process-button");
+  const dataOutputDiv = document.getElementById("data-output");
+  const dataTableBody = document.querySelector("#data-table tbody");
+  const errorMessageDiv = document.getElementById("error-message-generate");
+  const downloadExcelButton = document.getElementById("download-excel-button");
 
-  const uploadedFiles = {
-    program: null,
-    kegiatan: null,
-    subkegiatan: null,
-  };
+  const uploadedFiles = { program: null, kegiatan: null, subkegiatan: null };
 
-  // --- Utility Functions ---
-  function displayError(message) {
-    errorMessageDiv.textContent = message;
+  function displayError(msg) {
+    errorMessageDiv.textContent = msg;
     errorMessageDiv.style.display = "block";
   }
-
   function clearError() {
     errorMessageDiv.textContent = "";
     errorMessageDiv.style.display = "none";
   }
-
   function updateProcessButtonState() {
     processButton.disabled = !(
       uploadedFiles.program &&
@@ -33,525 +25,347 @@ document.addEventListener("DOMContentLoaded", () => {
       uploadedFiles.subkegiatan
     );
   }
-
   function renderFileList() {
     fileListDiv.innerHTML = "";
-    const filesPresent = Object.values(uploadedFiles).filter(
-      (file) => file !== null
-    );
-
+    const filesPresent = Object.values(uploadedFiles).filter((f) => f);
     if (filesPresent.length === 0) {
       fileListDiv.style.display = "none";
       return;
     }
     fileListDiv.style.display = "block";
-
-    const fileNamesMap = {
+    const fileMap = {
       "data_program.json": "Data Program",
       "data_kegiatan.json": "Data Kegiatan",
       "data_sub_kegiatan.json": "Data Sub Kegiatan",
     };
-
     for (const key in uploadedFiles) {
       const file = uploadedFiles[key];
       if (file) {
         const p = document.createElement("p");
-        p.textContent = `${fileNamesMap[file.name] || file.name} (${
-          file.name
-        })`;
-        const removeSpan = document.createElement("span");
-        removeSpan.textContent = "✅";
-        removeSpan.className = "remove-file";
-        removeSpan.onclick = () => removeFile(key);
-        p.appendChild(removeSpan);
+        p.textContent = `${fileMap[file.name] || file.name} (${file.name})`;
+        const rm = document.createElement("span");
+        rm.textContent = "✅";
+        rm.className = "remove-file";
+        rm.onclick = () => removeFile(key);
+        p.appendChild(rm);
         fileListDiv.appendChild(p);
       }
     }
     updateProcessButtonState();
   }
-
-  function removeFile(fileKey) {
-    uploadedFiles[fileKey] = null;
+  function removeFile(k) {
+    uploadedFiles[k] = null;
     renderFileList();
     clearOutput();
   }
-
   function clearOutput() {
     dataTableBody.innerHTML = "";
     dataOutputDiv.style.display = "none";
     downloadExcelButton.style.display = "none";
     clearError();
   }
-
-  function readFileAsText(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject(reader.error);
-      reader.readAsText(file);
+  function readFileAsText(f) {
+    return new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result);
+      r.onerror = () => rej(r.error);
+      r.readAsText(f);
     });
   }
-
-  // Fungsi untuk memformat angka menjadi format mata uang Rupiah untuk TAMPILAN HTML
-  function formatRupiahForDisplay(amount) {
-    if (typeof amount !== "number") {
-      amount = parseFloat(amount);
-    }
-    if (isNaN(amount) || amount === 0) {
-      return "-";
-    }
+  function formatRupiahForDisplay(v) {
+    if (typeof v !== "number") v = parseFloat(v);
+    if (isNaN(v) || v === 0) return "-";
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
       currency: "IDR",
       minimumFractionDigits: 0,
-    }).format(amount);
+    }).format(v);
+  }
+  function capitalizeWords(s) {
+    if (!s) return "";
+    return s.toLowerCase().replace(/(^|\s)\S/g, (a) => a.toUpperCase());
   }
 
-  // Fungsi untuk membersihkan angka dari format Rupiah untuk EXCEL
-  function cleanNumberForExcel(amount) {
-    if (typeof amount !== "number") {
-      amount = parseFloat(amount);
-    }
-    if (isNaN(amount) || amount === 0) {
-      return "0";
-    }
-    return amount.toString();
-  }
-
-  // Fungsi untuk mengubah setiap kata menjadi Capital Case
-  function capitalizeWords(str) {
-    if (!str) return "";
-    return str
-      .toLowerCase()
-      .replace(/(^|\s)\S/g, (firstLetter) => firstLetter.toUpperCase());
-  }
-
-  // --- Event Listeners for Drag and Drop ---
-  ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
-    dropArea.addEventListener(eventName, preventDefaults, false);
-  });
-
+  // drag-drop
+  ["dragenter", "dragover", "dragleave", "drop"].forEach((ev) =>
+    dropArea.addEventListener(ev, preventDefaults, false)
+  );
   function preventDefaults(e) {
     e.preventDefault();
     e.stopPropagation();
   }
-
-  ["dragenter", "dragover"].forEach((eventName) => {
+  ["dragenter", "dragover"].forEach((ev) =>
     dropArea.addEventListener(
-      eventName,
+      ev,
       () => dropArea.classList.add("highlight"),
       false
-    );
-  });
-
-  ["dragleave", "drop"].forEach((eventName) => {
+    )
+  );
+  ["dragleave", "drop"].forEach((ev) =>
     dropArea.addEventListener(
-      eventName,
+      ev,
       () => dropArea.classList.remove("highlight"),
       false
-    );
-  });
-
+    )
+  );
   dropArea.addEventListener("drop", handleDrop, false);
-
   function handleDrop(e) {
-    const dt = e.dataTransfer;
-    const files = dt.files;
-    addFiles(files);
+    addFiles(e.dataTransfer.files);
   }
-
   fileInput.addEventListener("change", (e) => {
-    const files = e.target.files;
-    addFiles(files);
+    addFiles(e.target.files);
     e.target.value = null;
   });
 
-  function addFiles(fileList) {
+  function addFiles(list) {
     clearError();
-    for (let i = 0; i < fileList.length; i++) {
-      const file = fileList[i];
-      if (file.type === "application/json") {
-        if (file.name === "data_program.json") {
-          uploadedFiles.program = file;
-        } else if (file.name === "data_kegiatan.json") {
-          uploadedFiles.kegiatan = file;
-        } else if (file.name === "data_sub_kegiatan.json") {
-          uploadedFiles.subkegiatan = file;
-        } else {
-          displayError(
-            `File '${file.name}' tidak dikenal. Harap unggah 'data_program.json', 'data_kegiatan.json', atau 'data_sub_kegiatan.json'.`
-          );
-        }
-      } else {
-        displayError(`File '${file.name}' bukan file JSON yang valid.`);
-      }
+    for (let i = 0; i < list.length; i++) {
+      const f = list[i];
+      if (f.type === "application/json") {
+        if (f.name === "data_program.json") uploadedFiles.program = f;
+        else if (f.name === "data_kegiatan.json") uploadedFiles.kegiatan = f;
+        else if (f.name === "data_sub_kegiatan.json")
+          uploadedFiles.subkegiatan = f;
+        else displayError(`File '${f.name}' tidak dikenal.`);
+      } else displayError(`File '${f.name}' bukan JSON.`);
     }
     renderFileList();
     clearOutput();
   }
 
-  let globalProgramsData = [];
-  let globalKegiatanData = [];
-  let globalSubKegiatanData = [];
+  let globalProgramsData = [],
+    globalKegiatanData = [],
+    globalSubKegiatanData = [];
 
-  // --- Main Processing Logic ---
+  function appendRow(program, kegiatan, sub, ang, rea, cls = "") {
+    const row = dataTableBody.insertRow();
+    if (cls) row.classList.add(cls);
+    row.insertCell(0).textContent = program;
+    row.insertCell(1).textContent = kegiatan;
+    row.insertCell(2).textContent = sub;
+    row.insertCell(3).textContent = ang;
+    row.insertCell(4).textContent = rea;
+  }
+
+  // fungsi merge tabel
+  function normalizeAndMergeTable(tbody) {
+    const rows = Array.from(tbody.rows);
+    const matrix = rows.map((r) => {
+      const txt = [];
+      r.querySelectorAll("td,th").forEach((c) =>
+        txt.push(c.textContent.trim())
+      );
+      while (txt.length < 5) txt.push("");
+      return txt.slice(0, 5);
+    });
+    const rc = matrix.length,
+      cc = 5;
+    const rowspan = Array.from({ length: rc }, () => Array(cc).fill(1));
+    const skip = Array.from({ length: rc }, () => Array(cc).fill(false));
+
+    for (let c = 0; c <= 2; c++) {
+      let start = 0;
+      while (start < rc) {
+        if (!matrix[start][c]) {
+          start++;
+          continue;
+        }
+        let end = start + 1;
+        while (end < rc && matrix[end][c] === matrix[start][c]) end++;
+        const span = end - start;
+        if (span > 1) {
+          rowspan[start][c] = span;
+          for (let r = start + 1; r < end; r++) skip[r][c] = true;
+        }
+        start = end;
+      }
+    }
+
+    const newTbody = document.createElement("tbody");
+    for (let r = 0; r < rc; r++) {
+      const tr = document.createElement("tr");
+      for (let c = 0; c < cc; c++) {
+        if (skip[r][c]) continue;
+        const td = document.createElement("td");
+        const val = matrix[r][c];
+        td.textContent = val && val !== "-" ? val : c >= 3 ? val : "";
+        if (rowspan[r][c] > 1) td.rowSpan = rowspan[r][c];
+        tr.appendChild(td);
+      }
+      newTbody.appendChild(tr);
+    }
+    tbody.parentNode.replaceChild(newTbody, tbody);
+    return newTbody;
+  }
+
+  // proses utama
   processButton.addEventListener("click", async () => {
     if (
       !uploadedFiles.program ||
       !uploadedFiles.kegiatan ||
       !uploadedFiles.subkegiatan
     ) {
-      displayError(
-        "Harap unggah ketiga file JSON yang diperlukan: data_program.json, merge_data_kegiatan.json, dan merge_data_subkeg.json."
-      );
+      displayError("Unggah semua file JSON.");
       return;
     }
-
     clearError();
     dataTableBody.innerHTML = "";
 
     try {
-      const [programContent, kegiatanContent, subKegiatanContent] =
-        await Promise.all([
-          readFileAsText(uploadedFiles.program),
-          readFileAsText(uploadedFiles.kegiatan),
-          readFileAsText(uploadedFiles.subkegiatan),
-        ]);
-
-      globalProgramsData = JSON.parse(programContent);
-      globalKegiatanData = JSON.parse(kegiatanContent);
-      globalSubKegiatanData = JSON.parse(subKegiatanContent);
-    } catch (error) {
-      displayError(
-        `Gagal membaca atau mem-parse file JSON: ${error.message}. Pastikan file valid.`
-      );
+      const [p, k, s] = await Promise.all([
+        readFileAsText(uploadedFiles.program),
+        readFileAsText(uploadedFiles.kegiatan),
+        readFileAsText(uploadedFiles.subkegiatan),
+      ]);
+      globalProgramsData = JSON.parse(p);
+      globalKegiatanData = JSON.parse(k);
+      globalSubKegiatanData = JSON.parse(s);
+    } catch (e) {
+      displayError("Gagal membaca JSON: " + e.message);
       return;
     }
 
     const kegiatanByProgram = new Map();
     globalKegiatanData.forEach((k) => {
-      if (!kegiatanByProgram.has(k.id_program)) {
+      if (!kegiatanByProgram.has(k.id_program))
         kegiatanByProgram.set(k.id_program, []);
-      }
       kegiatanByProgram.get(k.id_program).push(k);
     });
-
-    const subKegiatanByGiat = new Map();
-    globalSubKegiatanData.forEach((sk) => {
-      if (!subKegiatanByGiat.has(sk.id_giat)) {
-        subKegiatanByGiat.set(sk.id_giat, []);
-      }
-      subKegiatanByGiat.get(sk.id_giat).push(sk);
+    const subByGiat = new Map();
+    globalSubKegiatanData.forEach((s) => {
+      if (!subByGiat.has(s.id_giat)) subByGiat.set(s.id_giat, []);
+      subByGiat.get(s.id_giat).push(s);
     });
 
-    let hasDataToDisplay = false;
-    let totalAnggaran = 0;
-    let totalRealisasi = 0;
+    globalProgramsData.sort(
+      (a, b) => (a.id_program || 0) - (b.id_program || 0)
+    );
+    let totalA = 0,
+      totalR = 0;
 
-    globalProgramsData.sort((a, b) => {
-      if (
-        typeof a.id_program === "string" &&
-        typeof b.id_program === "string"
-      ) {
-        return a.id_program.localeCompare(b.id_program);
-      }
-      return (a.id_program || 0) - (b.id_program || 0);
-    });
-
-    globalProgramsData.forEach((program) => {
-      const programName = capitalizeWords(program.nama_program);
-      const programAnggaran = program.anggaran || 0;
-      const programRealisasi = program.realisasi_rill || 0;
-      const programAnggaranDisplay = formatRupiahForDisplay(programAnggaran);
-      const programRealisasiDisplay = formatRupiahForDisplay(programRealisasi);
-
-      // Add to totals
-      totalAnggaran += parseFloat(programAnggaran);
-      totalRealisasi += parseFloat(programRealisasi);
-
-      appendRowToTable(
-        programName,
-        "-",
-        "-",
-        programAnggaranDisplay,
-        programRealisasiDisplay,
-        "program-row"
-      );
-      hasDataToDisplay = true;
-
-      const relatedKegiatan = kegiatanByProgram.get(program.id_program) || [];
-      relatedKegiatan.sort((a, b) => {
-        if (typeof a.id_giat === "string" && typeof b.id_giat === "string") {
-          return a.id_giat.localeCompare(b.id_giat);
-        }
-        return (a.id_giat || 0) - (b.id_giat || 0);
-      });
-
-      if (relatedKegiatan.length > 0) {
-        relatedKegiatan.forEach((kegiatan) => {
-          const kegiatanName = capitalizeWords(kegiatan.nama_giat);
-          const kegiatanAnggaranDisplay = formatRupiahForDisplay(
-            kegiatan.anggaran
-          );
-          const kegiatanRealisasiDisplay = formatRupiahForDisplay(
-            kegiatan.realisasi_rill
-          );
-          appendRowToTable(
-            "",
-            kegiatanName,
-            "-",
-            kegiatanAnggaranDisplay,
-            kegiatanRealisasiDisplay,
-            "kegiatan-row"
-          );
-          hasDataToDisplay = true;
-
-          const relatedSubKegiatan =
-            subKegiatanByGiat.get(kegiatan.id_giat) || [];
-          relatedSubKegiatan.sort((a, b) => {
-            if (
-              typeof a.id_sub_giat === "string" &&
-              typeof b.id_sub_giat === "string"
-            ) {
-              return a.id_sub_giat.localeCompare(b.id_sub_giat);
-            }
-            return (a.id_sub_giat || 0) - (b.id_sub_giat || 0);
-          });
-
-          if (relatedSubKegiatan.length > 0) {
-            relatedSubKegiatan.forEach((subkegiatan) => {
-              const subKegiatanName = capitalizeWords(
-                subkegiatan.nama_sub_giat
+    globalProgramsData.forEach((p) => {
+      const prog = capitalizeWords(p.nama_program);
+      totalA += +p.anggaran || 0;
+      totalR += +p.realisasi_rill || 0;
+      const kegs = kegiatanByProgram.get(p.id_program) || [];
+      if (!kegs.length)
+        appendRow(
+          prog,
+          "-",
+          "-",
+          formatRupiahForDisplay(p.anggaran),
+          formatRupiahForDisplay(p.realisasi_rill)
+        );
+      else
+        kegs.forEach((k) => {
+          const keg = capitalizeWords(k.nama_giat);
+          const subs = subByGiat.get(k.id_giat) || [];
+          if (!subs.length)
+            appendRow(
+              prog,
+              keg,
+              "-",
+              formatRupiahForDisplay(k.anggaran),
+              formatRupiahForDisplay(k.realisasi_rill)
+            );
+          else
+            subs.forEach((s) => {
+              appendRow(
+                prog,
+                keg,
+                capitalizeWords(s.nama_sub_giat),
+                formatRupiahForDisplay(s.anggaran),
+                formatRupiahForDisplay(s.realisasi_rill)
               );
-              const subKegiatanAnggaranDisplay = formatRupiahForDisplay(
-                subkegiatan.anggaran
-              );
-              const subKegiatanRealisasiDisplay = formatRupiahForDisplay(
-                subkegiatan.realisasi_rill
-              );
-              appendRowToTable(
-                "",
-                "",
-                subKegiatanName,
-                subKegiatanAnggaranDisplay,
-                subKegiatanRealisasiDisplay,
-                "subkegiatan-row"
-              );
-              hasDataToDisplay = true;
             });
-          }
         });
-      }
     });
 
-    if (hasDataToDisplay) {
-      // Append the total row
-      const totalRow = dataTableBody.insertRow();
-      totalRow.classList.add("total-row");
-      const totalCell = totalRow.insertCell(0);
-      totalCell.textContent = "Jumlah";
-      totalCell.colSpan = 3;
-      totalCell.style.textAlign = "center";
-      totalCell.style.fontWeight = "bold";
+    const newTbody = normalizeAndMergeTable(
+      document.getElementById("data-table").tBodies[0]
+    );
+    const totalRow = newTbody.insertRow();
+    totalRow.classList.add("total-row");
+    const t1 = totalRow.insertCell(0);
+    t1.textContent = "Jumlah";
+    t1.colSpan = 3;
+    t1.style.textAlign = "center";
+    t1.style.fontWeight = "bold";
+    const t2 = totalRow.insertCell(1);
+    t2.textContent = formatRupiahForDisplay(totalA);
+    t2.style.fontWeight = "bold";
+    const t3 = totalRow.insertCell(2);
+    t3.textContent = formatRupiahForDisplay(totalR);
+    t3.style.fontWeight = "bold";
 
-      const totalAnggaranCell = totalRow.insertCell(1);
-      totalAnggaranCell.textContent = formatRupiahForDisplay(totalAnggaran);
-      totalAnggaranCell.style.fontWeight = "bold";
-
-      const totalRealisasiCell = totalRow.insertCell(2);
-      totalRealisasiCell.textContent = formatRupiahForDisplay(totalRealisasi);
-      totalRealisasiCell.style.fontWeight = "bold";
-
-      dataOutputDiv.style.display = "block";
-      downloadExcelButton.style.display = "inline-block";
-    } else {
-      displayError(
-        "Tidak ada data yang cocok ditemukan untuk ditampilkan dalam tabel."
-      );
-      clearOutput();
-    }
+    dataOutputDiv.style.display = "block";
+    downloadExcelButton.style.display = "inline-block";
   });
 
-  function appendRowToTable(
-    program,
-    kegiatan,
-    subKegiatan,
-    anggaran,
-    realisasi,
-    rowClass = ""
-  ) {
-    const row = dataTableBody.insertRow();
-    if (rowClass) {
-      row.classList.add(rowClass);
-    }
-    row.insertCell(0).textContent = program;
-    row.insertCell(1).textContent = kegiatan;
-    row.insertCell(2).textContent = subKegiatan;
-    row.insertCell(3).textContent = anggaran;
-    row.insertCell(4).textContent = realisasi;
-  }
-
-  // --- Fungsi Download Excel ---
+  // download excel tanpa baris kosong header
   downloadExcelButton.addEventListener("click", () => {
-    const formattedDate = new Date().toLocaleDateString("id-ID", {
+    const date = new Date().toLocaleDateString("id-ID", {
       year: "numeric",
       month: "long",
       day: "numeric",
     });
-
     const cellStyle =
-      "border: 1px solid black; padding: 4px; vertical-align: top; text-align: left;";
-    const totalRowStyle = "font-weight: bold; background-color: #e0f2f1;";
-    const headerStyle =
-      "text-align: center; font-weight: bold; background-color: #ccfbf1;";
-    const programStyle = "font-weight: bold; background-color: #f0fdf4;";
-    const kegiatanStyle = "font-style: italic; background-color: #f7fee7;";
-    const subKegiatanStyle = "background-color: #ffffff;";
-    const titleStyle = "text-align: center; font-weight: bold;";
-    const dateStyle = "text-align: right; font-size: 10px;";
+      "border:1px solid black;padding:4px;vertical-align:top;text-align:left;";
+    const headStyle = "font-weight:bold;text-align:center;";
 
-    let tableRows = "";
-    // Re-generate table content with inline styles for Excel
-    const tableHtml = document.getElementById("data-table").outerHTML;
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(tableHtml, "text/html");
-    const rows = doc.querySelectorAll("#data-table tbody tr");
-
-    rows.forEach((row) => {
-      let rowHtml = "<tr>";
-      const rowClass = row.className;
-      let style = cellStyle;
-      if (rowClass.includes("program-row")) style += programStyle;
-      else if (rowClass.includes("kegiatan-row")) style += kegiatanStyle;
-      else if (rowClass.includes("subkegiatan-row")) style += subKegiatanStyle;
-      else if (rowClass.includes("total-row")) style += totalRowStyle;
-
-      const cells = row.querySelectorAll("td");
-      cells.forEach((cell, index) => {
-        let content;
-        let cellContent = cell.textContent;
-        let cellStyleFinal = style;
-
-        if (rowClass.includes("total-row")) {
-          cellStyleFinal += "font-weight: bold;";
-          if (index === 0) {
-            cellStyleFinal += "text-align: center;";
-          }
-        }
-
-        // Columns for Anggaran (3) and Realisasi (4) need special handling
-        if (index === 3 || index === 4) {
-          // Clean number for Excel (remove commas/Rp, keep only number)
-          let cleanValue = cleanNumberForExcel(
-            cellContent.replace(/[^0-9,-]/g, "").replace(",", ".")
-          );
-
-          content = cleanValue;
-          cellStyleFinal += 'mso-number-format:"#,##0"; text-align: right;';
-        } else {
-          content = cellContent;
-        }
-
-        rowHtml += `<td colspan="${
-          cell.colSpan || 1
-        }" style="${cellStyleFinal}">${content}</td>`;
+    const rows = Array.from(document.querySelectorAll("#data-table tr"));
+    let htmlRows = "";
+    rows.forEach((r) => {
+      htmlRows += "<tr>";
+      r.querySelectorAll("th,td").forEach((c) => {
+        const rs = c.rowSpan > 1 ? `rowspan='${c.rowSpan}'` : "";
+        const cs = c.colSpan > 1 ? `colspan='${c.colSpan}'` : "";
+        let val = c.textContent || "";
+        const isNum = /Rp|[0-9]/.test(val);
+        if (
+          isNum &&
+          (val.includes("Rp") ||
+            /^[\d\.,\s-]+$/.test(val.replace(/[Rp\s]/g, "")))
+        ) {
+          val = val.replace(/[^0-9-]/g, "");
+          if (!val) val = "0";
+          htmlRows += `<td ${rs} ${cs} style="${cellStyle}mso-number-format:'#,##0';text-align:right;">${val}</td>`;
+        } else htmlRows += `<td ${rs} ${cs} style="${cellStyle}">${val}</td>`;
       });
-      rowHtml += "</tr>";
-      tableRows += rowHtml;
+      htmlRows += "</tr>";
     });
 
-    // Final Excel HTML structure
-    let excelTableHtml = `
-            <table style="border-collapse: collapse; width: 100%;">
-                <tr>
-                    <th colspan="5" style="${titleStyle} font-size: 16pt;">LAPORAN REALISASI ANGGARAN</th>
-                </tr>
-                <tr>
-                    <th colspan="5" style="${titleStyle} font-size: 12pt;">DINAS PERTANIAN KABUPATEN GROBOGAN</th>
-                </tr>
-                <tr>
-                    <th colspan="5" style="${dateStyle} font-size: 10pt;">Tanggal Cetak: ${formattedDate}</th>
-                </tr>
-                <tr>
-                    <th style="${headerStyle} ${cellStyle}">Program</th>
-                    <th style="${headerStyle} ${cellStyle}">Kegiatan</th>
-                    <th style="${headerStyle} ${cellStyle}">Sub Kegiatan</th>
-                    <th style="${headerStyle} ${cellStyle}">Anggaran (Rp)</th>
-                    <th style="${headerStyle} ${cellStyle}">Realisasi Rill (Rp)</th>
-                </tr>
-                <tbody>
-                    ${tableRows}
-                </tbody>
-            </table>
-            <br>
-            <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                    <td style="width: 33%; ${cellStyle} border: none;"></td>
-                    <td style="width: 33%; ${cellStyle} border: none;"></td>
-                    <td colspan="3" style="${cellStyle} border: none; text-align: center;">a.n. Kepala Dinas Pertanian Kab. Grobogan</td>
-                </tr>
-                <tr>
-                    <td style="width: 33%; ${cellStyle} border: none;"></td>
-                    <td style="width: 33%; ${cellStyle} border: none;"></td>
-                    <td colspan="3" style="${cellStyle} border: none; text-align: center;">Plt. Sekretaris</td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td colspan="3" style="text-align: center;">Kepala Bidang Sarpras & Perlindungan Tanaman</td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td colspan="3" style="text-align: center; height: 70px;"></td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td colspan="3" style="text-align: center;"><u>Slamet Waluyono, S.H., M.M</u></td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td colspan="3" style="text-align: center;">Pembina Utama Muda</td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td colspan="3" style="text-align: center;">NIP. 198606132010011012</td>
-                </tr>
-            </table>
-        `;
-
-    const excelContent = `
-            <html xmlns:o="urn:schemas-microsoft-com:office:office"
+    const excel = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office"
             xmlns:x="urn:schemas-microsoft-com:office:excel"
             xmlns="http://www.w3.org/TR/REC-html40">
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    table {
-                        border-collapse: collapse;
-                    }
-                </style>
-                </head>
-            <body>
-                ${excelTableHtml}
-            </body>
-            </html>
-        `;
-
-    const blob = new Blob([excelContent], {
+      <head><meta charset="UTF-8"></head>
+      <body>
+      <table style="border-collapse:collapse;width:100%;">
+        <tr><th colspan="5" style="${headStyle}font-size:12pt;border:none;">LAPORAN REALISASI ANGGARAN KEGIATAN</th></tr>
+        <tr><th colspan="5" style="${headStyle}font-size:12pt;border:none;">DINAS PERTANIAN KABUPATEN GROBOGAN TAHUN 2025</th></tr>
+        <br> 
+        <tr></tr>
+        <tr><th colspan="5" style="text-align:left;font-size:10pt;border:none;font-weight:normal;">Tanggal Cetak: ${date}</th></tr>
+        <tr>
+          <th style="${headStyle}${cellStyle}">Program</th>
+          <th style="${headStyle}${cellStyle}">Kegiatan</th>
+          <th style="${headStyle}${cellStyle}">Sub Kegiatan</th>
+          <th style="${headStyle}${cellStyle}">Pagu Anggaran (Rp)</th>
+          <th style="${headStyle}${cellStyle}">Realisasi (Rp)</th>
+        </tr>
+        ${htmlRows}
+      </table>
+      </body></html>
+    `;
+    const blob = new Blob([excel], {
       type: "application/vnd.ms-excel;charset=utf-8",
     });
     const url = URL.createObjectURL(blob);
-
     const a = document.createElement("a");
     a.href = url;
-    a.download = "data_program_kegiatan_subkegiatan.xls";
-    document.body.appendChild(a);
+    a.download = "Realisasi_Anggaran_Dispertan.xls";
     a.click();
-    document.body.removeChild(a);
     URL.revokeObjectURL(url);
   });
 });
